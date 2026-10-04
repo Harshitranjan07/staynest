@@ -74,6 +74,28 @@ npm run dev                   # app on http://localhost:5174
 
 **Booking flow to try:** login as guest → book a stay → login as host → accept → mark completed → login as guest → write a review.
 
+## 📸 Screenshots
+
+### Explore
+
+![Explore](docs/screenshots/explore.png)
+
+### Listing Detail
+
+![Listing Detail](docs/screenshots/listing-detail.png)
+
+### My Trips
+
+![My Trips](docs/screenshots/my-trips.png)
+
+### Host Dashboard
+
+![Host Dashboard](docs/screenshots/host-dashboard.png)
+
+### Demo
+
+![StayNest Demo Flow](docs/screenshots/demo.gif)
+
 ## 🔌 API reference
 
 | Method | Endpoint                        | Access      | Description                    |
