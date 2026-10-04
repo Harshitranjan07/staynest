@@ -23,6 +23,7 @@ export default function ListingForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState(empty);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({});
 
   useEffect(() => {
     if (!isEdit) return;
@@ -36,11 +37,51 @@ export default function ListingForm() {
     );
   }, [id, isEdit]);
 
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const set = (key) => (e) => {
+    setForm({ ...form, [key]: e.target.value });
+    if (!touched[key]) {
+      setTouched((prev) => ({ ...prev, [key]: true }));
+    }
+  };
+
+  const handleBlur = (key) => () => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+  };
+
+  // Validation rules
+  const errors = {};
+
+  // Title: 10 to 100 characters
+  if (!form.title || form.title.length < 10 || form.title.length > 100) {
+    errors.title = 'Title must be between 10 and 100 characters.';
+  }
+
+  // Description: at least 30 characters
+  if (!form.description || form.description.length < 30) {
+    errors.description = 'Description must be at least 30 characters.';
+  }
+
+  // Price: greater than 0, not empty
+  const priceNum = Number(form.pricePerNight);
+  if (form.pricePerNight === '' || form.pricePerNight === null || isNaN(priceNum) || priceNum <= 0) {
+    errors.pricePerNight = 'Price must be greater than 0.';
+  }
+
+  // Image URL: valid URL if provided
+  if (form.imageUrl && form.imageUrl.trim()) {
+    try {
+      new URL(form.imageUrl.trim());
+    } catch {
+      errors.imageUrl = 'Please enter a valid image URL.';
+    }
+  }
+
+  const hasErrors = Object.keys(errors).length > 0;
 
   // TODO: replace the image URL field with real image upload (Cloudinary / multer).
   const submit = async (e) => {
     e.preventDefault();
+    if (hasErrors) return;
     setError('');
     const { title, description, type, city, state, address, imageUrl, amenities } = form;
     const payload = {
@@ -55,7 +96,7 @@ export default function ListingForm() {
       bedrooms: Number(form.bedrooms),
       amenities: amenities.split(',').map((a) => a.trim()).filter(Boolean),
     };
-    if (imageUrl) payload.images = [imageUrl];
+    if (imageUrl) payload.images = [imageUrl.trim()];
     try {
       if (isEdit) await api.put(`/listings/${id}`, payload);
       else await api.post('/listings', payload);
@@ -68,13 +109,42 @@ export default function ListingForm() {
   return (
     <form className="card form wide" onSubmit={submit}>
       <h1>{isEdit ? 'Edit listing' : 'Create a new listing'}</h1>
-      <input required placeholder="Title" value={form.title} onChange={set('title')} />
-      <textarea required placeholder="Describe your place" value={form.description} onChange={set('description')} />
+      <div>
+        <input
+          required
+          placeholder="Title"
+          value={form.title}
+          onChange={set('title')}
+          onBlur={handleBlur('title')}
+        />
+        {touched.title && errors.title && <p className="error small">{errors.title}</p>}
+      </div>
+      <div>
+        <textarea
+          required
+          placeholder="Describe your place"
+          value={form.description}
+          onChange={set('description')}
+          onBlur={handleBlur('description')}
+        />
+        {touched.description && errors.description && <p className="error small">{errors.description}</p>}
+      </div>
       <div className="row">
         <select value={form.type} onChange={set('type')}>
           {STAY_TYPES.map((t) => <option key={t}>{t}</option>)}
         </select>
-        <input required type="number" min="0" placeholder="Price per night (₹)" value={form.pricePerNight} onChange={set('pricePerNight')} />
+        <div className="grow">
+          <input
+            required
+            type="number"
+            min="0"
+            placeholder="Price per night (₹)"
+            value={form.pricePerNight}
+            onChange={set('pricePerNight')}
+            onBlur={handleBlur('pricePerNight')}
+          />
+          {touched.pricePerNight && errors.pricePerNight && <p className="error small">{errors.pricePerNight}</p>}
+        </div>
       </div>
       <div className="row">
         <input required placeholder="City" value={form.city} onChange={set('city')} />
@@ -90,9 +160,17 @@ export default function ListingForm() {
         </label>
       </div>
       <input placeholder="Amenities (comma separated: WiFi, AC, Parking)" value={form.amenities} onChange={set('amenities')} />
-      <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={set('imageUrl')} />
+      <div>
+        <input
+          placeholder="Image URL (optional)"
+          value={form.imageUrl}
+          onChange={set('imageUrl')}
+          onBlur={handleBlur('imageUrl')}
+        />
+        {touched.imageUrl && errors.imageUrl && <p className="error small">{errors.imageUrl}</p>}
+      </div>
       {error && <p className="error">{error}</p>}
-      <button className="btn">{isEdit ? 'Save changes' : 'Publish listing'}</button>
+      <button className="btn" disabled={hasErrors}>{isEdit ? 'Save changes' : 'Publish listing'}</button>
     </form>
   );
 }
