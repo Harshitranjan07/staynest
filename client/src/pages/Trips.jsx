@@ -8,6 +8,8 @@ export default function Trips() {
   const location = useLocation();
   const [bookings, setBookings] = useState(null);
   const [error, setError] = useState('');
+  const [cancellingBooking, setCancellingBooking] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const load = () =>
     api
@@ -19,13 +21,17 @@ export default function Trips() {
     load();
   }, []);
 
-  // TODO: ask for confirmation before cancelling.
-  const cancel = async (id) => {
+  const handleConfirmCancel = async () => {
+    if (!cancellingBooking || isSubmitting) return;
     try {
-      await api.patch(`/bookings/${id}/cancel`);
+      setIsSubmitting(true);
+      await api.patch(`/bookings/${cancellingBooking._id}/cancel`);
+      setCancellingBooking(null);
       load();
     } catch (err) {
       setError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -54,12 +60,50 @@ export default function Trips() {
               <span className={`status status-${b.status}`}>{b.status}</span>
               <strong>{formatINR(b.totalPrice)}</strong>
               {['pending', 'confirmed'].includes(b.status) && (
-                <button className="btn btn-danger" onClick={() => cancel(b._id)}>Cancel</button>
+                <button className="btn btn-danger" onClick={() => setCancellingBooking(b)}>Cancel</button>
               )}
             </div>
           </div>
         ))}
       </div>
+
+      {cancellingBooking && (
+        <div
+          className="modal-backdrop"
+          onClick={() => !isSubmitting && setCancellingBooking(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-dialog-title"
+        >
+          <div className="card modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 id="cancel-dialog-title" style={{ margin: 0 }}>Cancel booking</h2>
+            <p style={{ margin: 0 }}>
+              Are you sure you want to cancel your stay at <strong>{cancellingBooking.listing?.title}</strong>?
+            </p>
+            <p className="muted" style={{ margin: 0 }}>
+              <strong>Dates:</strong> {formatDate(cancellingBooking.checkIn)} – {formatDate(cancellingBooking.checkOut)}
+            </p>
+            <div className="row" style={{ justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setCancellingBooking(null)}
+                disabled={isSubmitting}
+              >
+                Keep Booking
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleConfirmCancel}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Cancelling...' : 'Confirm Cancellation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
