@@ -80,6 +80,18 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; colo
 .loader { text-align: center; color: var(--muted); padding: 40px; }
 
 .hero-img { width: 100%; max-height: 460px; object-fit: cover; border-radius: var(--radius); margin: 16px 0; }
+.gallery { margin: 16px 0 24px; }
+.gallery .hero-img { margin: 0 0 12px; }
+.gallery-thumbnails { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.gallery-thumb-btn {
+  background: none; border: 2px solid transparent; border-radius: 8px; padding: 0; cursor: pointer;
+  overflow: hidden; flex-shrink: 0; transition: border-color 0.15s ease, opacity 0.15s ease; opacity: 0.65;
+}
+.gallery-thumb-btn:hover { opacity: 0.9; }
+.gallery-thumb-btn.active, .gallery-thumb-btn[aria-selected="true"] { border-color: var(--primary); opacity: 1; outline: none; }
+.gallery-thumb-btn:focus-visible { outline: 2px solid var(--primary); }
+.gallery-thumb-img { width: 90px; height: 60px; object-fit: cover; display: block; }
+
 .detail-layout { display: grid; grid-template-columns: 1fr 360px; gap: 40px; align-items: start; }
 .detail-layout h2 { text-transform: capitalize; }
 .amenities { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
@@ -95,6 +107,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; colo
 
 .form { padding: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin-top: 20px; }
 .form.wide { max-width: 720px; margin: 0 auto; }
+.image-inputs-group { display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
 .auth { margin: 40px auto; max-width: 400px; }
 .role-toggle { display: flex; flex-direction: column; gap: 8px; }
 .role-toggle label { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }

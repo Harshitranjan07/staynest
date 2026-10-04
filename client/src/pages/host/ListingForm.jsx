@@ -14,7 +14,7 @@ const empty = {
   maxGuests: 2,
   bedrooms: 1,
   amenities: '',
-  imageUrl: '',
+  images: [''],
 };
 
 export default function ListingForm() {
@@ -30,19 +30,35 @@ export default function ListingForm() {
       setForm({
         ...empty,
         ...data,
-        amenities: data.amenities.join(', '),
-        imageUrl: data.images[0] || '',
+        amenities: Array.isArray(data.amenities) ? data.amenities.join(', ') : '',
+        images: Array.isArray(data.images) && data.images.length > 0 ? data.images : [''],
       })
     );
   }, [id, isEdit]);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  // TODO: replace the image URL field with real image upload (Cloudinary / multer).
+  const handleImageChange = (index, value) => {
+    const nextImages = [...form.images];
+    nextImages[index] = value;
+    setForm({ ...form, images: nextImages });
+  };
+
+  const addImageField = () => {
+    setForm({ ...form, images: [...form.images, ''] });
+  };
+
+  const removeImageField = (index) => {
+    const nextImages = form.images.filter((_, i) => i !== index);
+    setForm({ ...form, images: nextImages.length > 0 ? nextImages : [''] });
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-    const { title, description, type, city, state, address, imageUrl, amenities } = form;
+    const { title, description, type, city, state, address, images, amenities } = form;
+    const cleanImages = images.map((img) => img.trim()).filter(Boolean);
+
     const payload = {
       title,
       description,
@@ -55,7 +71,9 @@ export default function ListingForm() {
       bedrooms: Number(form.bedrooms),
       amenities: amenities.split(',').map((a) => a.trim()).filter(Boolean),
     };
-    if (imageUrl) payload.images = [imageUrl];
+    if (cleanImages.length > 0) {
+      payload.images = cleanImages;
+    }
     try {
       if (isEdit) await api.put(`/listings/${id}`, payload);
       else await api.post('/listings', payload);
@@ -90,7 +108,33 @@ export default function ListingForm() {
         </label>
       </div>
       <input placeholder="Amenities (comma separated: WiFi, AC, Parking)" value={form.amenities} onChange={set('amenities')} />
-      <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={set('imageUrl')} />
+      
+      <div className="image-inputs-group">
+        <label className="muted small">Listing Images (URLs)</label>
+        {form.images.map((img, idx) => (
+          <div key={idx} className="row">
+            <input
+              placeholder={`Image URL ${idx + 1}`}
+              value={img}
+              onChange={(e) => handleImageChange(idx, e.target.value)}
+            />
+            {form.images.length > 1 && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => removeImageField(idx)}
+                aria-label={`Remove image ${idx + 1}`}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" className="btn btn-ghost" onClick={addImageField} style={{ alignSelf: 'flex-start' }}>
+          + Add another image
+        </button>
+      </div>
+
       {error && <p className="error">{error}</p>}
       <button className="btn">{isEdit ? 'Save changes' : 'Publish listing'}</button>
     </form>
