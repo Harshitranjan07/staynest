@@ -70,6 +70,25 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; colo
   background: #fde9e3; color: var(--primary); padding: 2px 8px; border-radius: 999px;
 }
 
+/* Skeleton & shimmer */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #ece4da 25%, #f7f3ee 50%, #ece4da 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+.skeleton-card { pointer-events: none; }
+.skeleton-img { aspect-ratio: 4 / 3; width: 100%; border-radius: 0; }
+.skeleton-tag { width: 64px; height: 18px; border-radius: 999px; }
+.skeleton-rating { width: 48px; height: 18px; }
+.skeleton-title { width: 80%; height: 20px; margin-top: 2px; }
+.skeleton-subtitle { width: 55%; height: 16px; }
+.skeleton-price { width: 45%; height: 18px; margin-top: 2px; }
+
 .row { display: flex; gap: 10px; align-items: center; }
 .row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .grow { flex: 1; }
