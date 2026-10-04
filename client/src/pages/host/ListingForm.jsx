@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../api/client.js';
 import { STAY_TYPES } from '../../utils/format.js';
+import ListingMap from '../../components/ListingMap.jsx';
 
 const empty = {
   title: '',
@@ -15,6 +16,7 @@ const empty = {
   bedrooms: 1,
   amenities: '',
   imageUrl: '',
+  location: null,
 };
 
 export default function ListingForm() {
@@ -32,17 +34,22 @@ export default function ListingForm() {
         ...data,
         amenities: data.amenities.join(', '),
         imageUrl: data.images[0] || '',
+        location: data.location || null,
       })
     );
   }, [id, isEdit]);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
+  const handleLocationSelect = (loc) => {
+    setForm({ ...form, location: loc });
+  };
+
   // TODO: replace the image URL field with real image upload (Cloudinary / multer).
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-    const { title, description, type, city, state, address, imageUrl, amenities } = form;
+    const { title, description, type, city, state, address, imageUrl, amenities, location } = form;
     const payload = {
       title,
       description,
@@ -56,6 +63,9 @@ export default function ListingForm() {
       amenities: amenities.split(',').map((a) => a.trim()).filter(Boolean),
     };
     if (imageUrl) payload.images = [imageUrl];
+    if (location && typeof location.lat === 'number' && typeof location.lng === 'number') {
+      payload.location = location;
+    }
     try {
       if (isEdit) await api.put(`/listings/${id}`, payload);
       else await api.post('/listings', payload);
@@ -91,6 +101,25 @@ export default function ListingForm() {
       </div>
       <input placeholder="Amenities (comma separated: WiFi, AC, Parking)" value={form.amenities} onChange={set('amenities')} />
       <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={set('imageUrl')} />
+
+      <div style={{ marginTop: '8px' }}>
+        <label className="muted small">
+          Stay Location on Map (Click map to pin location)
+          {form.location && (
+            <span style={{ color: 'var(--text)', marginLeft: '6px' }}>
+              · {form.location.lat}, {form.location.lng}
+            </span>
+          )}
+        </label>
+        <ListingMap
+          location={form.location}
+          interactive={true}
+          onLocationSelect={handleLocationSelect}
+          height="220px"
+          zoom={form.location ? 13 : 5}
+        />
+      </div>
+
       {error && <p className="error">{error}</p>}
       <button className="btn">{isEdit ? 'Save changes' : 'Publish listing'}</button>
     </form>
